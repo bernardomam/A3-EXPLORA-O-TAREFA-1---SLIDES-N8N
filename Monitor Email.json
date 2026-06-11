@@ -1,0 +1,250 @@
+{
+  "name": "Monitor Email",
+  "nodes": [
+    {
+      "parameters": {
+        "path": "monitor-telegram",
+        "responseMode": "responseNode",
+        "options": {}
+      },
+      "id": "800cfbcc-a590-459f-a3d2-b70ec543b8fa",
+      "name": "Recebe Palavra",
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2,
+      "position": [
+        -496,
+        112
+      ],
+      "webhookId": "c61dd61f-4327-4845-a793-e75b6bd596f4"
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 1
+          },
+          "conditions": [
+            {
+              "id": "cond-1",
+              "leftValue": "={{ $json.query.palavra }}",
+              "rightValue": "urgente",
+              "operator": {
+                "type": "string",
+                "operation": "equals"
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "id": "233a238e-ce69-489e-b805-9d69b852b9d3",
+      "name": "É urgente?",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2,
+      "position": [
+        -256,
+        112
+      ]
+    },
+    {
+      "parameters": {
+        "respondWith": "json",
+        "responseBody": "{ \"mensagem\": \"Registrado e e-mail enviado: urgente\" }",
+        "options": {}
+      },
+      "id": "9b6c0cd3-7b73-438a-a821-e2c52298df08",
+      "name": "Responde urgente",
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1,
+      "position": [
+        256,
+        0
+      ]
+    },
+    {
+      "parameters": {
+        "respondWith": "json",
+        "responseBody": "{ \"mensagem\": \"Registrado e e-mail enviado: normal\" }",
+        "options": {}
+      },
+      "id": "cdb988cf-d878-47af-bfca-81db5cc5b699",
+      "name": "Responde normal",
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1,
+      "position": [
+        256,
+        224
+      ]
+    },
+    {
+      "parameters": {
+        "fromEmail": "richardrios2772@gmail.com",
+        "toEmail": "richardrios2772@gmail.com",
+        "subject": "Monitoramento N8N - Palavra Recebida",
+        "html": "=<h3>Aviso do Monitor de E-mail</h3>\n<p>Uma nova palavra foi processada pelo sistema!</p>\n<p><strong>Palavra recebida:</strong> {{ $json.query.palavra }}</p>",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.emailSend",
+      "typeVersion": 2.1,
+      "position": [
+        0,
+        224
+      ],
+      "id": "58444f77-10ad-459e-a050-177059933bc9",
+      "name": "Email Normal",
+      "webhookId": "f70a051a-97c0-4194-af0f-4e263209c770",
+      "credentials": {
+        "smtp": {
+          "id": "2zGFEHhHpmWPGeC9",
+          "name": "SMTP account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "fromEmail": "richardrios2772@gmail.com",
+        "toEmail": "richardrios2772@gmail.com",
+        "subject": "ATENÇÃO: Monitoramento N8N - URGO!",
+        "html": "=<h3>⚠️ Alerta Urgente do Sistema!</h3>\n<p>Uma palavra classificada como URGENTE foi recebida!</p>\n<p><strong>Palavra recebida:</strong> {{ $json.query.palavra }}</p>",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.emailSend",
+      "typeVersion": 2.1,
+      "position": [
+        0,
+        0
+      ],
+      "id": "d3024b63-f44c-4e35-9859-fbb080878d40",
+      "name": "Send an Email",
+      "webhookId": "c57afe2c-ab5a-420f-9bd6-f106b63624de",
+      "credentials": {
+        "smtp": {
+          "id": "2zGFEHhHpmWPGeC9",
+          "name": "SMTP account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://script.google.com/macros/s/AKfycbyAzRREn7xPIkCohNCjYUUcecqLzt566MoFsEawZyJzlS3u8UdF4l87P_3P8DWVlSIA/exec",
+        "sendBody": true,
+        "bodyParameters": {
+          "parameters": [
+            {
+              "name": "palavra",
+              "value": "={{ $item(0).$node[\"Recebe Palavra\"].json[\"query\"][\"palavra\"] }}"
+            },
+            {
+              "name": "status",
+              "value": "={{ $item(0).$node[\"Recebe Palavra\"].json[\"query\"][\"palavra\"] == 'urgente' ? 'Urgente' : 'Normal' }}"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.4,
+      "position": [
+        496,
+        128
+      ],
+      "id": "096700f5-9658-4938-94a3-cd1f3b15750b",
+      "name": "HTTP Request"
+    }
+  ],
+  "pinData": {},
+  "connections": {
+    "Recebe Palavra": {
+      "main": [
+        [
+          {
+            "node": "É urgente?",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "É urgente?": {
+      "main": [
+        [
+          {
+            "node": "Send an Email",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Email Normal",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Email Normal": {
+      "main": [
+        [
+          {
+            "node": "Responde normal",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Send an Email": {
+      "main": [
+        [
+          {
+            "node": "Responde urgente",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Responde urgente": {
+      "main": [
+        [
+          {
+            "node": "HTTP Request",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Responde normal": {
+      "main": [
+        [
+          {
+            "node": "HTTP Request",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": false,
+  "settings": {
+    "executionOrder": "v1",
+    "binaryMode": "separate",
+    "availableInMCP": false
+  },
+  "versionId": "20519bb7-467b-4f98-bc50-2c43fca8a6f5",
+  "meta": {
+    "templateCredsSetupCompleted": true,
+    "instanceId": "203b1a83e82781f15fc2b846396ebaaf1bb525a680066215d43c0464653e67e2"
+  },
+  "nodeGroups": [],
+  "id": "PLsRhmVXsEzQLiOv",
+  "tags": []
+}
