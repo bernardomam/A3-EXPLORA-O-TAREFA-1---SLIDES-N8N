@@ -1,0 +1,280 @@
+{
+  "name": "Fluxo de Registro de Solicitações",
+  "nodes": [
+    {
+      "parameters": {
+        "path": "ab02d49d-621e-45d0-a12c-16ef7ea73b84",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2.1,
+      "position": [
+        0,
+        0
+      ],
+      "id": "7a9a9fa7-9647-4ba9-b41a-df33c8a3f9ae",
+      "name": "Webhook",
+      "webhookId": "ab02d49d-621e-45d0-a12c-16ef7ea73b84"
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "0d2ceb0d-71cd-4d87-9d8d-d55ae3f571e0",
+              "name": "nome",
+              "value": "={{ $json.query.nome }}",
+              "type": "string"
+            },
+            {
+              "id": "b3ed4d23-6c1c-4875-81ce-8bc18138b2f3",
+              "name": "mensagem",
+              "value": "={{ $json.query.mensagem }}",
+              "type": "string"
+            },
+            {
+              "id": "9725ba39-91b8-4866-b86f-53d6ea2d3b6f",
+              "name": "data",
+              "value": "={{$now}}",
+              "type": "string"
+            }
+          ]
+        },
+        "includeOtherFields": true,
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        240,
+        0
+      ],
+      "id": "ec48cec3-2169-42b7-aec1-cb31de99213d",
+      "name": "Edit Fields"
+    },
+    {
+      "parameters": {
+        "jsCode": "const items = $input.all();\n\nreturn items.map(item => {\n  const texto = item.json.mensagem || \"\";\n  const positivas = [\"bom\", \"ótimo\", \"excelente\", \"feliz\", \"amor\", \"parabéns\", \"incrível\", \"maravilhoso\", \"perfeito\"];\n  const negativas = [\"ruim\", \"péssimo\", \"horrível\", \"triste\", \"odeio\", \"terrível\", \"lixo\", \"pior\", \"decepcionante\"];\n\n  const lower = texto.toLowerCase();\n  let sentimento = \"Neutro\";\n\n  if (positivas.some(p => lower.includes(p))) sentimento = \"Positivo\";\n  else if (negativas.some(n => lower.includes(n))) sentimento = \"Negativo\";\n\n  return {\n    json: {\n      nome: item.json.nome,\n      mensagem: item.json.mensagem,\n      sentimento: sentimento\n    }\n  };\n});"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        448,
+        0
+      ],
+      "id": "3a74ba91-e183-4412-8ea7-6f8e1b5e73c7",
+      "name": "Code in JavaScript"
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 3
+          },
+          "conditions": [
+            {
+              "id": "f26c54ff-8394-4a12-917d-fb0150bcdeda",
+              "leftValue": "={{ $json.sentimento }}",
+              "rightValue": "Positivo",
+              "operator": {
+                "type": "string",
+                "operation": "equals",
+                "name": "filter.operator.equals"
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.3,
+      "position": [
+        656,
+        0
+      ],
+      "id": "76858b78-8d3e-4171-b048-37fa91717380",
+      "name": "If"
+    },
+    {
+      "parameters": {
+        "chatId": "8215363674",
+        "text": "=⚠️ Sentimento Negativo ou Neutro! Nome: {{$json.nome}} Mensagem: {{$json.mensagem}}",
+        "additionalFields": {}
+      },
+      "type": "n8n-nodes-base.telegram",
+      "typeVersion": 1.2,
+      "position": [
+        880,
+        112
+      ],
+      "id": "808be094-09b1-4775-a271-05f3682f81da",
+      "name": "sentimento negativo",
+      "webhookId": "a30947c1-7af4-4d24-8e52-f49d1ae1292b",
+      "credentials": {
+        "telegramApi": {
+          "id": "B2ZXnNdTTXNlndta",
+          "name": "Telegram account 2"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "chatId": "8215363674",
+        "text": "=✅ Sentimento Positivo!\nNome:{{$json.nome}}\nMensagem:{{$json.mensagem}}",
+        "additionalFields": {}
+      },
+      "type": "n8n-nodes-base.telegram",
+      "typeVersion": 1.2,
+      "position": [
+        880,
+        -48
+      ],
+      "id": "52c42e13-6c1e-44d7-b1a0-945dc371136e",
+      "name": "sentimento positivo",
+      "webhookId": "91f4da01-db75-4916-a35f-f097efeffe54",
+      "credentials": {
+        "telegramApi": {
+          "id": "B2ZXnNdTTXNlndta",
+          "name": "Telegram account 2"
+        }
+      }
+    }
+  ],
+  "pinData": {
+    "sentimento negativo": [
+      {
+        "json": {
+          "name": "First item",
+          "code": 1
+        }
+      },
+      {
+        "json": {
+          "name": "Second item",
+          "code": 2
+        }
+      }
+    ],
+    "sentimento positivo": [
+      {
+        "json": {
+          "name": "First item",
+          "code": 1
+        }
+      },
+      {
+        "json": {
+          "name": "Second item",
+          "code": 2
+        }
+      }
+    ],
+    "Code in JavaScript": [
+      {
+        "json": {
+          "name": "First item",
+          "code": 1
+        }
+      },
+      {
+        "json": {
+          "name": "Second item",
+          "code": 2
+        }
+      }
+    ],
+    "Edit Fields": [
+      {
+        "json": {
+          "name": "First item",
+          "code": 1
+        }
+      },
+      {
+        "json": {
+          "name": "Second item",
+          "code": 2
+        }
+      }
+    ]
+  },
+  "connections": {
+    "Webhook": {
+      "main": [
+        [
+          {
+            "node": "Edit Fields",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Edit Fields": {
+      "main": [
+        [
+          {
+            "node": "Code in JavaScript",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Code in JavaScript": {
+      "main": [
+        [
+          {
+            "node": "If",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "If": {
+      "main": [
+        [
+          {
+            "node": "sentimento positivo",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "sentimento negativo",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "sentimento negativo": {
+      "main": [
+        []
+      ]
+    },
+    "sentimento positivo": {
+      "main": [
+        []
+      ]
+    }
+  },
+  "active": true,
+  "settings": {
+    "executionOrder": "v1",
+    "binaryMode": "separate"
+  },
+  "versionId": "fba16185-52c3-4131-a592-f41aad8379a3",
+  "meta": {
+    "templateCredsSetupCompleted": true,
+    "instanceId": "75c2e7e46fe228b02b4e95b76f5694bd5920046ee8eacea4b7d2991600159ebb"
+  },
+  "id": "lkTQ2qKdeW81mdCv",
+  "tags": []
+}
